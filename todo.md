@@ -10,3 +10,6 @@ $ cabal run demi -- +RTS -s < i/15
 # Todo
 
 * how to time time?
+
+ - tried `timeit`, resolution too low.
+ - `Criterion` did not build properly -> unusable

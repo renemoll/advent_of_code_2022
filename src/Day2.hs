@@ -1,45 +1,70 @@
 module Day2 where
 
-parse :: String -> (Char, Char)
-parse input = (a, b)
-    where [x, y] = words input
-          a = head x
-          b = head y
+data Hand = Rock
+          | Paper
+          | Scissors
+            deriving(Enum, Eq)
 
-score :: Char -> Int
-score x = case x of 'X' -> 1
-                    'Y' -> 2
-                    'Z' -> 3
+data Result = Loss
+            | Draw
+            | Win
+              deriving(Enum)
 
-rotate :: Int -> [a] -> [a]
-rotate n xs = take (length xs) (drop n (cycle xs))
+game :: (Hand, Hand) -> Result
+game (Rock, Paper) = Win
+game (Paper, Scissors) = Win
+game (Scissors, Rock) = Win
+game (x, y)
+    | x == y = Draw
+    | otherwise = Loss
 
-offset :: Char -> Int
-offset x = case x of 'A' -> 0
-                     'B' -> 1
-                     'C' -> 2
+parse1 :: String -> (Hand, Hand)
+parse1 xs = (l x, r y)
+    where
+        x = head xs
+        y = last xs
+        l 'A' = Rock
+        l 'B' = Paper
+        l 'C' = Scissors
+        r 'X' = Rock
+        r 'Y' = Paper
+        r 'Z' = Scissors
 
-scoreGame :: Char -> Char -> Int
-scoreGame a b = hand + game
-    where hand = score b
-          game = (rotate (3 - (offset a)) [3, 6, 0]) !! (hand - 1)
+scoreHand :: Hand -> Int
+scoreHand x = 1 + fromEnum x
 
-part1 :: [(Char, Char)] -> Int
-part1 x = sum $ map work x
-    where work x = scoreGame (fst x) (snd x)
+scoreGame :: Result -> Int
+scoreGame x = 3 * fromEnum x
 
-scoreGame2 :: Char -> Char -> Int
-scoreGame2 a b = hand + game
-    where hand = (rotate (offset a) [3, 1, 2]) !! ((score b) - 1)
-          game = [0, 3, 6] !! ((score b) - 1)
+score1 :: (Hand, Hand) -> Int
+score1 all@(_,y) = (scoreHand y) + (scoreGame (game all))
 
+part1 :: [String] -> Int
+part1 xs = sum $ map (score1 . parse1) xs
 
-part2 :: [(Char, Char)] -> Int
-part2 x = sum $ map work x
-    where work x = scoreGame2 (fst x) (snd x)
+parse2 :: String -> (Hand, Result)
+parse2 xs = (l x, r y)
+    where
+        x = head xs
+        y = last xs
+        l 'A' = Rock
+        l 'B' = Paper
+        l 'C' = Scissors
+        r 'X' = Loss
+        r 'Y' = Draw
+        r 'Z' = Win
+
+predicatedHand :: (Hand, Result) -> Hand
+predicatedHand (h, r) = toEnum $ ((fromEnum h) + (fromEnum r) + 2) `mod` 3
+
+score2 :: (Hand, Result) -> Int
+score2 all@(_,y) = (scoreGame y) + (scoreHand (predicatedHand all))
+
+part2 :: [String] -> Int
+part2 xs = sum $ map (score2 . parse2) xs
 
 solve :: String -> (String, String)
 solve input = (s1, s2)
-  where numbers = map parse $ lines input
-        s1 = show $ part1 numbers -- 15422
-        s2 = show $ part2 numbers -- show $ part2 numbers -- ?
+  where xs = lines input
+        s1 = show $ part1 xs -- 15422
+        s2 = show $ part2 xs -- 15442
